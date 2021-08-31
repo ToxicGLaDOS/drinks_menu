@@ -1,0 +1,39 @@
+<script>
+
+    function updateHiddenInStock(){
+        var checkBox = document.getElementById("in_stock_only_checkbox");
+        var out_of_stock_visibility = checkBox.checked ? "hidden" : "visible";
+        var drink_list = document.getElementById("drink_list");
+        var drinks = drink_list.getElementsByTagName("li");
+
+        for (var i=0; i < drinks.length; i++){
+            drink = drinks[i];
+            if(drink.getAttribute("in_stock") == "False"){ 
+                drink.style.visibility = out_of_stock_visibility;
+            }
+            else{ 
+                drink.style.visibility = "visible";
+            }
+        }
+    }
+
+</script>
+
+
+<input type="checkbox" id="in_stock_only_checkbox" onclick="updateHiddenInStock()">
+<label for="in_stock_only">Show in stock only</label><br>
+{% if drinks_list %}
+    <ul id="drink_list">
+        {% for drink_values in drinks_list %}
+            {% with drink=drink_values.drink in_stock=drink_values.in_stock %}
+        <li in_stock={{ in_stock }}><a href="{% url 'drinks_menu:specific_drink' drink.name %}">{{ drink.name }}</a>
+        {% if drink.picture %}
+            <img src="{{ drink.picture.url }}" alt="Image of {{ drink.name }}" />
+        {% endif %}
+        </li>
+            {% endwith %}
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No drinks are available.</p>
+{% endif %}
