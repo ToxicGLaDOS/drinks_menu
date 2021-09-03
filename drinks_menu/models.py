@@ -16,6 +16,7 @@ class Drink(models.Model):
     name = models.CharField(max_length=200)
     # Uploads to MEDIA_ROOT/drink_images/
     picture = models.ImageField(null=True, blank=True, upload_to="drink_images/")
+    directions = models.TextField()
 
 
     def __str__(self):

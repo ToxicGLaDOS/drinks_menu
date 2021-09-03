@@ -9,7 +9,8 @@ class MeasuredIngredientInline(admin.TabularInline):
 class DrinkAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {'fields': ['name']}),
-        ("Image", {'fields': ['picture']})
+        ("Image", {'fields': ['picture']}),
+        ("Directions", {'fields': ['directions']})
     ]
     inlines = [MeasuredIngredientInline]
 
