@@ -6,6 +6,7 @@ from measurement.measures import Volume
 class Ingredient(models.Model):
     name = models.CharField(max_length=200)
     in_stock = models.BooleanField()
+    is_liquor = models.BooleanField()
 
     def __str__(self):
         return self.name

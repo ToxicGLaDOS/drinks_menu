@@ -1,39 +1,137 @@
 <script>
+    // "Globals"
+    const ingredients_col = 2
+    const in_stock_col = 3
+    var ingredients_filter_text;
+    var drink_table;
+    var drinks;
 
-    function updateHiddenInStock(){
-        var checkBox = document.getElementById("in_stock_only_checkbox");
-        var out_of_stock_visibility = checkBox.checked ? "hidden" : "visible";
-        var drink_list = document.getElementById("drink_list");
-        var drinks = drink_list.getElementsByTagName("li");
 
-        for (var i=0; i < drinks.length; i++){
-            drink = drinks[i];
-            if(drink.getAttribute("in_stock") == "False"){ 
-                drink.style.visibility = out_of_stock_visibility;
-            }
-            else{ 
-                drink.style.visibility = "visible";
+    function onload(){
+        ingredient_filter_text = document.getElementById("ingredient_filter");
+        ingredient_filter_text.addEventListener("input", updateTable);
+        drink_table = document.getElementById("drinks_table");
+        drinks = drink_table.getElementsByTagName("tr");
+    }
+
+    function updateTable(){
+        for(var i = 0; i < drinks.length; i++){
+            row = drinks[i];
+            row.style.display = "";
+        }
+        applyIngredientFilters();
+        applyHideNotInStock();
+    }
+
+    function applyIngredientFilters(){
+        var text = ingredient_filter_text.value;
+        // Get all ingredient filters from text
+        // and clean up input
+        ingredients_filters = text.split("&");
+        for(var i=0; i < ingredients_filters.length; i++){
+            ingredients_filters[i] = ingredients_filters[i].trim().toLowerCase();
+        }
+        ingredients_filters = ingredients_filters.filter((s) => {return s != ""});
+
+        for(var i=0; i < drinks.length; i++){
+            row = drinks[i];
+
+            var ingredients_entry = row.getElementsByTagName("td")[ingredients_col];
+            if(ingredients_entry){
+                // Get all ingredients from table
+                // and clean up the text
+                ingredients = []
+                ingredients_lis = ingredients_entry.getElementsByTagName("li");
+                for(var j=0; j < ingredients_lis.length; j++){
+                    ingredients[j] = ingredients_lis[j].innerText.trim().toLowerCase();
+                }
+                console.log(ingredients);
+                ingredients_filters.forEach((ingredients_filter, index) => {
+                    if(! ingredients.includes(ingredients_filter)){
+                        row.style.display = "none";
+                    }
+                });
             }
         }
     }
 
+    function applyHideNotInStock(){
+        var checkBox = document.getElementById("in_stock_only_checkbox");
+        if (checkBox.checked){
+            for (var i=0; i < drinks.length; i++){
+                row = drinks[i];
+                var in_stock_entry = row.getElementsByTagName("td")[in_stock_col];
+                if(in_stock_entry){
+                    var in_stock = in_stock_entry.innerHTML
+                    if(in_stock == "False"){
+                        row.style.display = "none";
+                    }
+                }
+            }
+        }
+    }
+
+    window.addEventListener('load', onload);
 </script>
 
+<style type="text/css">
+.drink_in_stock {
+    display: none;
+}
+table {
+    outline: 1px solid;
+    border-collapse: collapse;
+}
+td,
+th {
+    border: 1px solid;
+    padding: 10px 10px;
+}
+.drink_name {
+    text-align: center;
+}
+ul {
+    padding: 10px;
+}
 
-<input type="checkbox" id="in_stock_only_checkbox" onclick="updateHiddenInStock()">
+</style>
+
+<input type="checkbox" id="in_stock_only_checkbox" onclick="updateTable()">
 <label for="in_stock_only">Show in stock only</label><br>
+<input type="text" placeholder="Separate ingredients by &" id="ingredient_filter">
+<label for="ingredient_filter">Filter by ingredient</label><br>
 {% if drinks_list %}
-    <ul id="drink_list">
-        {% for drink_values in drinks_list %}
-            {% with drink=drink_values.drink in_stock=drink_values.in_stock %}
-        <li in_stock={{ in_stock }}><a href="{% url 'drinks_menu:specific_drink' drink.name %}">{{ drink.name }}</a>
-        {% if drink.picture %}
-            <img src="{{ drink.picture.url }}" alt="Image of {{ drink.name }}" />
-        {% endif %}
-        </li>
-            {% endwith %}
-    {% endfor %}
-    </ul>
+    <table id="drinks_table">
+        <colgroup>
+            <col class="name">
+            <col class="picture">
+            <col class="in_stock">
+        </colgroup>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Picture</th>
+            <th scope="col">Ingredients</th>
+            <th scope="col" class="drink_in_stock">In Stock</th>
+        </tr>
+        {% for drink in drinks_list %}
+            <tr>
+                <td class="drink_name"><a href="{{drink.name}}">{{drink.name}}</a></td>
+                <td class="drink_picture">
+                {% if drink.picture_url %}
+                    <img src="{{ drink.picture_url }}" height="200" width="200" alt="Image of {{ drink.name }}" />
+                {% endif %}
+                </td>
+                <td class="drink_ingredients">
+                    <ul>
+                        {% for ingredient in drink.ingredients %}
+                            <li>{{ingredient}}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td class="drink_in_stock">{{drink.in_stock}}</td>
+            </tr>
+        {% endfor %}
+    </table>
 {% else %}
     <p>No drinks are available.</p>
 {% endif %}
