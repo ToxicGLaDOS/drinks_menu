@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,19 +22,56 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
+if os.environ.get('development') == 'true':
+    SECRET_KEY = "%Kj4KtfLCAcPW3BCYB9%7ZfU4tYCq*i%$@UM^tuH^KEHmvkTkKJoE**#4QEsdbvy9g!WnP"
+else:
+    SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# TODO: Set to False in production
-DEBUG = True
 
-# TODO: Set to True in production
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+if os.environ.get('development') == 'true':
+    DEBUG = True
+else:
+    DEBUG = False
+
+if os.environ.get('development') == 'true':
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+else:
+    # This is off because nginx terminates ssl
+    # before it gets to django
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 
 # TODO: Add domain to list in production
-ALLOWED_HOSTS = []
+
+
+if os.environ.get('development') == 'true':
+    ALLOWED_HOSTS = []
+else:
+    ALLOWED_HOSTS = ['menu.blackolivepineapple.pizza']
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 # Application definition
 
@@ -80,13 +118,24 @@ WSGI_APPLICATION = 'menu.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('development') == 'true':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgresdb',
+            'USER': 'postgresadmin',
+            'PASSWORD': os.environ['DATABASE_PASSWORD'],
+            'HOST': 'postgres',
+            'PORT': '5432',
+        }
+    }
 
 
 # Password validation
@@ -125,6 +174,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
+STATIC_ROOT = BASE_DIR / 'static/'
 STATIC_URL = '/static/'
 
 # Default primary key field type
@@ -132,5 +182,10 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_ROOT = "/home/jeff/projects/django-site/menu/drinks_menu/media/"
-MEDIA_URL = ""
+
+if os.environ.get('development') == 'true':
+    MEDIA_ROOT = BASE_DIR / "drinks_menu/media/"
+else:
+    MEDIA_ROOT = "/media/"
+# Prepends media/ to media urls
+MEDIA_URL = "media/"

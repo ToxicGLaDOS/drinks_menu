@@ -45,7 +45,6 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         drinks = Drink.objects.order_by('name')
-        print(drinks)
         processed_drinks = [get_drink_context(d) for d in drinks]
         return processed_drinks
 
