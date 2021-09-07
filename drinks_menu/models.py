@@ -2,6 +2,8 @@ from django.db import models
 from django_measurement.models import MeasurementField
 from measurement.measures import Volume
 
+class Glassware(models.Model):
+    name = models.CharField(max_length=200)
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=200)
@@ -17,7 +19,7 @@ class Drink(models.Model):
     # Uploads to MEDIA_ROOT/drink_images/
     picture = models.ImageField(null=True, blank=True, upload_to="drink_images/")
     directions = models.TextField()
-
+    glass = models.ForeignKey(Glassware, on_delete=models.PROTECT)
 
     def __str__(self):
         return self.name
@@ -29,4 +31,3 @@ class MeasuredIngredient(models.Model):
 
     def __str__(self):
         return f"{self.volume.us_oz}oz {str(self.ingredient)}"
-
